@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import { StyleSheet } from 'react-native';
-import { createStore, combineReducers } from 'redux';
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+import ReduxThunk from 'redux-thunk';
 import { Provider } from 'react-redux';
 import productreducer from './store/reducers/products';
 import orderReducer from './store/reducers/order';
@@ -15,7 +16,7 @@ const reducers = combineReducers({
   orders: orderReducer
 });
 
-const store = createStore(reducers);
+const store = createStore(reducers, applyMiddleware(ReduxThunk));
 
 const loadFonts = () => {
   return Font.loadAsync({

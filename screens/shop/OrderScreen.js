@@ -1,14 +1,41 @@
-import React from 'react';
-import { FlatList, Text } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
 import { useSelector } from 'react-redux';
 import {HeaderButtons, Item} from 'react-navigation-header-buttons';
 import CustomHeaderButton from '../../components/ui/HeaderButton';
 import OrderItem from '../../components/shop/OrderItem';
+import { useDispatch } from 'react-redux';
+import { fetchOrders } from '../../store/actions/order';
+import Colors  from '../../constants/Colors';
 
-const OrderScreen = () => {
+const OrderScreen = (props) => {
+    const [isLoading, setIsLoading] = useState(false);
     const orders = useSelector(state => state.orders.orders);
-    console.log(orders, 'orders');
+    const dispatch = useDispatch();
+    
+    const loadOrders = async () => {
+      setIsLoading(true);
+      await dispatch(fetchOrders());
+      setIsLoading(false);
+    };
+    useEffect(() => {
+      loadOrders();
+    }, [dispatch]);
 
+    useEffect(() => {
+      // will only fire after the first render
+      const willFocusSub = props.navigation.addListener('willFocus',  loadOrders);
+
+      return () => {
+        willFocusSub.remove();
+      }
+    }, [loadOrders])
+
+    if (isLoading) {
+      return <View style={styles.centered}>
+        <ActivityIndicator size='large' color={Colors.primary}/>
+      </View>
+    }
     return (
         <FlatList
           data={orders}
@@ -16,11 +43,20 @@ const OrderScreen = () => {
           renderItem={itemData => <OrderItem
             amount={itemData.item.totalAmount}
             date={itemData.item.readableDate}
+            items={itemData.item.items}
           />}
         />
     );
 
 }
+
+const styles = StyleSheet.create({
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
+  }
+});
 
 OrderScreen.navigationOptions = navData => {
     return {

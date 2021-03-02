@@ -1,12 +1,14 @@
-import React from 'react';
-import {StyleSheet, View, Button, FlatList, Text} from 'react-native';
+import React, { useState} from 'react';
+import {StyleSheet, View, Button, FlatList, Text, ActivityIndicator} from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import Colors from '../../constants/Colors';
 import CartItem from '../../components/shop/CartItem';
 import { removeFromCart } from '../../store/actions/cart';
 import { addOrder } from '../../store/actions/order'; 
+import Card from '../../components/ui/Card';
 
 const CartScreen = () => {
+    const [isLoading, setIsLoading] = useState(false);
     const cartAmount = useSelector(state => state.cart.totalAmount);
     const cartItems = useSelector(state => {
         const items = [];
@@ -21,20 +23,28 @@ const CartScreen = () => {
         }
         return items.sort((a,b) => a.productKey > b.productKey ? 1 : 1);
     });
-    console.log(cartItems);
     const dispatch = useDispatch();
+
+    const sendOrderHandler = async () => {
+        setIsLoading(true);
+        await dispatch(addOrder(cartItems, cartAmount));
+        setIsLoading(false);
+    }
 
     return (
        <View style={styles.screen}>
-           <View style={styles.summary}>
-               <Text style={styles.summaryText}>Total: <Text style={styles.amount}>${cartAmount.toFixed(2)}</Text> </Text>
-               <Button
+           <Card style={styles.summary}>
+               <Text style={styles.summaryText}>Total: <Text style={styles.amount}>${Math.round(cartAmount.toFixed(2) * 100) / 100}</Text> </Text>
+               { isLoading ?
+                   <ActivityIndicator size='small' color={Colors.primary} />
+                  :  <Button
                   color={Colors.accent}
                   title='Order Now'
                   disabled={cartItems.length == 0}
-                  onPress={() => dispatch(addOrder(cartItems, cartAmount))}
+                  onPress={sendOrderHandler}
                 />
-           </View>
+               }
+           </Card>
            <FlatList
               data={cartItems}
               keyExtractor={item => item.productKey}
@@ -42,6 +52,7 @@ const CartScreen = () => {
                      quantity={itemData.item.quantity}
                      title={itemData.item.title}
                      amount={itemData.item.sum}
+                     canDelete
                      onRemove={() => dispatch(removeFromCart(itemData.item.productKey))}
                   />
               }
@@ -60,12 +71,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 20,
         padding: 10,
-        shadowColor: 'black',
-        shadowOpacity: 0.26,
-        shadowOffset: {width: 0, height: 2},
-        shadowRadius: 8,
-        elevation: 5,
-        borderRadius: 10
     },
     summaryText: {
        fontFamily: 'open-sans-bold',
