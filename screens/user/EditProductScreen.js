@@ -37,7 +37,7 @@ const EditProductScreen = (props) => {
     const productId = props.navigation.getParam('productId');
     const editProduct = useSelector(state => state.products.userProducts.find(product => product.id === productId));
     const [isLoading, setIsLoading] = useState(false);
-    const [hasError, setHasError] = useState(null);
+    const [error, setError] = useState(null);
 
     const [formState, dispatchFormState] = useReducer(formReducer, {
         inputValues: {
@@ -80,7 +80,7 @@ const EditProductScreen = (props) => {
             return;
         }
 
-        setHasError(null);
+        setError(null);
         setIsLoading(true);
 
         try {
@@ -100,7 +100,7 @@ const EditProductScreen = (props) => {
                   ));
               }
         } catch(err) {
-            setHasError(err.message);
+            setError(err.message);
         }
      
         setIsLoading(false);
@@ -111,6 +111,7 @@ const EditProductScreen = (props) => {
     useEffect(() => {
         props.navigation.setParams({'submit': submitHandler})
     }, [submitHandler]);
+
 
     if (isLoading) {
       return (

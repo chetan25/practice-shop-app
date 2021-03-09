@@ -7,9 +7,10 @@ export const UPDATE_PRODUCT = 'UPDATE_PRODUCT';
 export const SET_PRODUCT = 'SET_PRODUCT';
 
 export const deleteProduct = (productId) => {
-  return async dispatch => {
+  return async (dispatch, getState) => {
+    const token = getState().auth.token;
     await fetch(
-      `${BASE_URL}/products/${productId}.json`, {
+      `${BASE_URL}/products/${productId}.json?auth=${token}`, {
       method: 'DELETE',
     });
 
@@ -21,10 +22,12 @@ export const deleteProduct = (productId) => {
 }
 
 export const createProduct = (title, description, imageUrl, price) => {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
     // can execute any async code, and redux thunk will handle all async
     // firebase specific syntax
-    const response = await fetch(`${BASE_URL}/products.json`, {
+    const token = getState().auth.token;
+    const userId = getState().auth.userId;
+    const response = await fetch(`${BASE_URL}/products.json?auth=${token}`, {
       method: 'POST',
       header: {
         'Content-Type': 'application/json'
@@ -33,7 +36,8 @@ export const createProduct = (title, description, imageUrl, price) => {
         title,
         description,
         price,
-        imageUrl
+        imageUrl,
+        ownerId: userId
       })
     });
  
@@ -46,16 +50,20 @@ export const createProduct = (title, description, imageUrl, price) => {
         title: title,
         description: description,
         imageUrl: imageUrl,
-        price: price
+        price: price,
+        ownerId: userId
       }
     })
   }
 }
 
 export const updateProduct = (pid, title, description, imageUrl) => {
-  return async dispatch => {
+  return async (dispatch, getState) => {
+    // thunk gives us second argument that is a function that returns store
+      const token = getState().auth.token;
+
       const response = await fetch(
-          `${BASE_URL}/products/${pid}.json`, {
+          `${BASE_URL}/products/${pid}.json?auth=${token}`, {
         method: 'PATCH',
         header: {
           'Content-Type': 'application/json'
@@ -84,7 +92,8 @@ export const updateProduct = (pid, title, description, imageUrl) => {
 }
 
 export const fetchProduct = () => {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
+    const userId = getState().auth.userId;
     try {
       const response = await fetch(`${BASE_URL}/products.json`);
       if (!response.ok) {
@@ -95,17 +104,18 @@ export const fetchProduct = () => {
       const loadedPoducts = [];
       for(const key in resData) {
         loadedPoducts.push(new Product(
-          key, 'u1',
+          key,
+          resData[key].ownerId,
           resData[key].title,
           resData[key].imageUrl,
           resData[key].description,
           parseFloat(resData[key].price)
         ));
       }
-      console.log(resData, 'resData');
       dispatch({
         type: SET_PRODUCT,
-        products: loadedPoducts
+        products: loadedPoducts,
+        userProducts: loadedPoducts.filter(product => product.ownerId === userId)
       });
     } catch (err) {
       // handle error

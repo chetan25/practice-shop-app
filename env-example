@@ -1,1 +1,3 @@
 BASE_URL=Your Firebase URL
+AUTH_URL=Auth URL
+API_KEY=API Key

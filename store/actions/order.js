@@ -5,9 +5,11 @@ export const ADD_ORDER = 'ADD_ORDER';
 export const SET_ORDER  = 'SET_ORDER';
 
 export const addOrder = (cartItems, totalAmount) => {
-    return async dispatch => {
+    return async (dispatch, getState) => {
+        const token = getState().auth.token;
+        const userId = getState().auth.userId;
         const orderDate = new Date();
-        const response = await fetch(`${BASE_URL}/orders/u1.json`, {
+        const response = await fetch(`${BASE_URL}/orders/${userId}.json?auth=${token}`, {
             method: 'POST',
             header: {
               'Content-Type': 'application/json'
@@ -38,9 +40,11 @@ export const addOrder = (cartItems, totalAmount) => {
 }
 
 export const fetchOrders = () => {
-    return async dispatch => {
+    return async (dispatch, getState) => {
+      const token = getState().auth.token;
+      const userId = getState().auth.userId;
         try {
-            const response = await fetch(`${BASE_URL}/orders/u1.json`);
+            const response = await fetch(`${BASE_URL}/orders/${userId}.json?auth=${token}`);
             if (!response.ok) {
               throw Error('Error fetching products');
             }
